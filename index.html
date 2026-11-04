@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#090909">
+<title>FAMA AI | LUSIFER PERSONAL AI</title>
+<style>
+:root{--gold:#d6ad60;--bg:#090909;--panel:#111;--muted:#999}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#f5f1e9;font-family:Tahoma,Arial,sans-serif}
+button,input,textarea{font:inherit}
+.app{display:flex;min-height:100vh}
+.sidebar{width:245px;background:#0d0d0d;border-left:1px solid #29231a;padding:28px 18px;flex-shrink:0}
+.logo{font-size:27px;font-weight:bold;letter-spacing:3px;color:var(--gold)}
+.sub{font-size:10px;color:#aaa;letter-spacing:2px;margin:7px 0 35px}
+.menu button{display:block;width:100%;text-align:right;background:transparent;border:0;color:#bbb;padding:15px 13px;margin:5px 0;border-radius:9px;cursor:pointer}
+.menu button.active,.menu button:hover{background:#211b11;color:var(--gold)}
+.sidefoot{margin-top:45px;color:#777;font-size:11px;line-height:2}
+main{flex:1;padding:30px;max-width:1200px;margin:auto;width:100%}
+.top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #29231a;padding-bottom:20px;gap:12px}
+.top small{color:#aaa}
+.status{color:var(--gold);font-size:12px}
+h1{font-size:25px;font-weight:500;margin:28px 0 8px}
+.gold{color:var(--gold)}
+.muted{color:var(--muted);line-height:1.9;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:25px 0}
+.card{background:linear-gradient(145deg,#171717,#101010);border:1px solid #302719;border-radius:14px;padding:20px}
+.card h3{color:var(--gold);font-size:15px;margin:0 0 10px}
+.card p{font-size:12px;color:#aaa;line-height:1.9}
+.action{display:inline-block;background:#c49a4d;color:#090909;border:0;border-radius:8px;padding:11px 16px;text-decoration:none;font-weight:bold;cursor:pointer;font-size:12px}
+.secondary{background:#211b11;color:var(--gold);border:1px solid #514027}
+.section{display:none}
+.section.active{display:block}
+.panel{background:#111;border:1px solid #302719;border-radius:14px;padding:20px;margin-top:20px}
+input,textarea{width:100%;background:#090909;color:white;border:1px solid #3a3021;border-radius:9px;padding:14px;margin:10px 0;outline:none}
+textarea{min-height:110px;resize:vertical}
+.task{padding:12px;border-bottom:1px solid #29231a;color:#ddd;display:flex;gap:10px;align-items:center}
+.task input{width:auto;margin:0}
+.task.done span{text-decoration:line-through;color:#777}
+#reply{white-space:pre-wrap;line-height:2;color:#ddd;margin-top:15px}
+footer{text-align:center;color:#666;font-size:10px;padding:35px 0}
+@media(max-width:700px){
+.app{display:block}
+.sidebar{width:100%;padding:17px;border-left:0;border-bottom:1px solid #29231a}
+.logo{font-size:22px}
+.sub{margin:5px 0 15px}
+.menu{display:flex;overflow-x:auto;gap:5px}
+.menu button{white-space:nowrap;width:auto;padding:11px;font-size:12px}
+.sidefoot{display:none}
+main{padding:20px 15px}
+h1{font-size:22px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<div class="logo">FAMA AI</div>
+<div class="sub">LUSIFER PERSONAL AI</div>
+<nav class="menu">
+<button class="active" data-page="home">⌂ خانه</button>
+<button data-page="chat">◈ گفت‌وگو</button>
+<button data-page="instagram">◎ اینستاگرام</button>
+<button data-page="reels">▶ سناریوی ریلز</button>
+<button data-page="planner">▤ برنامه روزانه</button>
+</nav>
+<div class="sidefoot">YOUR PERSONAL AI ASSISTANT<br><span class="gold">POWERED BY LUSIFER</span></div>
+</aside>
+
+<main>
+<div class="top">
+<div><strong class="gold">FAMA</strong> <small> / دستیار شخصی تو</small></div>
+<div class="status">● سیستم آماده است</div>
+</div>
+
+<section id="home" class="section active">
+<h1>به دنیای <span class="gold">FAMA AI</span> خوش آمدی</h1>
+<p class="muted">دستیار هوشمند و همراه روزانه LUSIFER TATTOO</p>
+<div class="grid">
+<div class="card"><h3>◈ گفت‌وگوی هوشمند</h3><p>با دستیار هوشمندت صحبت کن و ایده بگیر.</p><button class="action" onclick="openPage('chat')">شروع گفت‌وگو</button></div>
+<div class="card"><h3>◎ مدیریت اینستاگرام</h3><p>بررسی عملکرد پیج و تحلیل محتوا.</p><button class="action" onclick="openPage('instagram')">ورود</button></div>
+<div class="card"><h3>▶ سناریوی ریلز</h3><p>ایده‌پردازی و ساخت سناریو برای ویدیوها.</p><button class="action" onclick="openPage('reels')">ساخت سناریو</button></div>
+<div class="card"><h3>▤ برنامه روزانه</h3><p>کارهایت را ثبت کن و پیگیرشان باش.</p><button class="action" onclick="openPage('planner')">برنامه من</button></div>
+</div>
+<div class="panel">
+<h3 class="gold">پیام FAMA</h3>
+<p class="muted">من اینجام تا به رشد برندت، تولید محتوای حرفه‌ای و مدیریت کارهای روزانه‌ات کمک کنم.</p>
+</div>
+</section>
+
+<section id="chat" class="section">
+<h1>گفت‌وگو با <span class="gold">FAMA</span></h1>
+<p class="muted">برای گفت‌وگوی هوشمند، چت‌جی‌پی‌تی را باز کن. می‌توانی با صدای فارسی هم صحبت کنی.</p>
+<div class="panel">
+<button class="action" onclick="window.open('https://chatgpt.com/','_blank')">شروع گفت‌وگوی صوتی و متنی</button>
+</div>
+</section>
+
+<section id="instagram" class="section">
+<h1>مدیریت <span class="gold">Instagram</span></h1>
+<p class="muted">ابزار مدیریت و تحلیل پیج LUSIFER TATTOO</p>
+<div class="grid">
+<div class="card"><h3>تحلیل پیج</h3><p>بررسی آمار، بازدید، تعامل و عملکرد محتوا.</p><a class="action" href="https://app.metricool.com/" target="_blank">ورود به Metricool</a></div>
+<div class="card"><h3>ایده تولید محتوا</h3><p>برای دریافت ایده و برنامه محتوا از دستیار کمک بگیر.</p><button class="action" onclick="askAI('برای پیج تتو LUSIFER TATTOO یک برنامه تولید محتوای حرفه‌ای پیشنهاد بده.')">دریافت ایده</button></div>
+</div>
+</section>
+
+<section id="reels" class="section">
+<h1>استودیوی <span class="gold">Reels</span></h1>
+<p class="muted">موضوع ویدیوت رو بنویس تا برای ساخت سناریو به دستیار ارسال بشه.</p>
+<div class="panel">
+<textarea id="topic" placeholder="مثلاً: یکی از سخت‌ترین اجراهای تتوی من..."></textarea>
+<button class="action" onclick="makeReel()">ساخت سناریو با FAMA</button>
+</div>
+</section>
+
+<section id="planner" class="section">
+<h1>برنامه <span class="gold">روزانه</span></h1>
+<p class="muted">کارهایت را ثبت کن و بعد از انجام، تیک بزن.</p>
+<div class="panel">
+<input id="taskInput" placeholder="کار جدید را بنویس...">
+<button class="action" onclick="addTask()">افزودن کار</button>
+<div id="tasks"></div>
+</div>
+</section>
+
+<footer>FAMA AI © 2026 — LUSIFER TATTOO</footer>
+</main>
+</div>
+<script>
+function openPage(id){
+document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+document.querySelectorAll('.menu button').forEach(x=>x.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+document.querySelector('[data-page="'+id+'"]').classList.add('active');
+}
+document.querySelectorAll('.menu button').forEach(b=>b.addEventListener('click',()=>openPage(b.dataset.page)));
+
+function askAI(prompt){
+window.open('https://chatgpt.com/?q='+encodeURIComponent(prompt),'_blank');
+}
+function makeReel(){
+let topic=document.getElementById('topic').value.trim();
+if(!topic){alert('اول موضوع ویدیوت رو بنویس');return;}
+askAI('برای برند LUSIFER TATTOO یک سناریوی وایرال اینستاگرام ریلز درباره این موضوع بنویس: '+topic+' . هوک سه ثانیه اول، متن روی تصویر، پلان‌ها، کپشن و هشتگ‌های مرتبط را پیشنهاد بده.');
+}
+let tasks=JSON.parse(localStorage.getItem('famaTasks')||'[]');
+function saveTasks(){localStorage.setItem('famaTasks',JSON.stringify(tasks));renderTasks();}
+function addTask(){
+let v=document.getElementById('taskInput').value.trim();
+if(!v)return;
+tasks.push({text:v,done:false});
+document.getElementById('taskInput').value='';
+saveTasks();
+}
+function toggleTask(i){tasks[i].done=!tasks[i].done;saveTasks();}
+function deleteTask(i){tasks.splice(i,1);saveTasks();}
+function renderTasks(){
+document.getElementById('tasks').innerHTML=tasks.map((t,i)=>
+'<div class="task '+(t.done?'done':'')+'"><input type="checkbox" '+(t.done?'checked':'')+' onchange="toggleTask('+i+')"><span style="flex:1">'+escapeHTML(t.text)+'</span><button class="secondary action" onclick="deleteTask('+i+')">حذف</button></div>'
+).join('');
+}
+function escapeHTML(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+renderTasks();
+</script>
+</body>
+</html>
