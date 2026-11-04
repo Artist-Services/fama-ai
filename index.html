@@ -8,8 +8,8 @@
 <title>FAMA AI | LUSIFER</title>
 
 <!-- آیکون مخصوص سایت و صفحه اصلی آیپد -->
-<link rel="icon" type="image/png" sizes="192x192" href="./fama-icon.png?v=5">
-<link rel="apple-touch-icon" sizes="180x180" href="./fama-icon.png?v=5">
+<link rel="icon" type="image/svg+xml" href="./fama-icon.svg">
+<link rel="manifest" href="./manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FAMA AI">
 
@@ -578,8 +578,7 @@ async function renderDesigns(){
       card.className='design';
 
       const img=document.createElement('img');
-      img.src=url;
-      img.alt=x.title;
+      <img src="./fama-icon.svg" alt="FAMA AI" class="brandmark">
 
       const info=document.createElement('div');
       info.className='design-info';
@@ -631,6 +630,14 @@ dbReady.then(()=>{
   document.getElementById('libraryEmpty').textContent=
     'ذخیره‌سازی این مرورگر فعال نیست.';
 });
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .catch(error => console.error("FAMA SW:", error));
+  });
+}
+
 </script>
 </body>
 </html>
