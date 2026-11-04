@@ -7,59 +7,56 @@
 <meta name="theme-color" content="#090909">
 <title>FAMA AI | LUSIFER</title>
 
-<!-- آیکون مخصوص سایت و صفحه اصلی آیپد -->
 <link rel="icon" type="image/svg+xml" href="./fama-icon.svg">
 <link rel="manifest" href="./manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FAMA AI">
 
 <style>
-:root{
+:root {
   --gold:#d6ad60;
   --bg:#090909;
-  --panel:#111;
+  --panel:#141414;
   --muted:#999;
 }
-*{box-sizing:border-box}
-body{
+* { box-sizing:border-box; }
+body {
   margin:0;
   background:var(--bg);
   color:#f5f1e9;
   font-family:Tahoma,Arial,sans-serif;
 }
-button,input,textarea,select{font:inherit}
-button{cursor:pointer}
-.app{display:flex;min-height:100vh}
-.sidebar{
+button,input,textarea,select { font:inherit; }
+button { cursor:pointer; }
+.app { display:flex; min-height:100vh; }
+.sidebar {
   width:245px;
   background:#0d0d0d;
   border-left:1px solid #29231a;
   padding:25px 17px;
   flex-shrink:0;
 }
-.brand{display:flex;align-items:center;gap:11px}
-.brandmark{
+.brand { display:flex; align-items:center; gap:11px; }
+.brandmark {
   width:48px;
   height:48px;
   border:1px solid var(--gold);
   border-radius:13px;
-  display:block;
   object-fit:cover;
-  flex-shrink:0;
 }
-.logo{
+.logo {
   font-size:24px;
   font-weight:bold;
   letter-spacing:2px;
   color:var(--gold);
 }
-.sub{
+.sub {
   font-size:9px;
   color:#aaa;
   letter-spacing:1.5px;
   margin:5px 0 30px;
 }
-.menu button{
+.menu button {
   display:block;
   width:100%;
   text-align:right;
@@ -70,24 +67,24 @@ button{cursor:pointer}
   margin:5px 0;
   border-radius:9px;
 }
-.menu button.active,.menu button:hover{
+.menu button.active,.menu button:hover {
   background:#211b11;
   color:var(--gold);
 }
-.sidefoot{
+.sidefoot {
   margin-top:38px;
   color:#777;
   font-size:11px;
   line-height:2;
 }
-main{
+main {
   flex:1;
   padding:28px;
   max-width:1250px;
   margin:auto;
   width:100%;
 }
-.top{
+.top {
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -95,26 +92,26 @@ main{
   padding-bottom:18px;
   gap:12px;
 }
-.top small{color:#aaa}
-.status{color:var(--gold);font-size:12px}
-h1{font-size:25px;font-weight:500;margin:28px 0 8px}
-.gold{color:var(--gold)}
-.muted{color:var(--muted);line-height:1.9;font-size:13px}
-.grid{
+.top small { color:#aaa; }
+.status { color:var(--gold); font-size:12px; }
+h1 { font-size:25px; font-weight:500; margin:28px 0 8px; }
+.gold { color:var(--gold); }
+.muted { color:var(--muted); line-height:1.9; font-size:13px; }
+.grid {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
   gap:14px;
   margin:25px 0;
 }
-.card{
-  background:linear-gradient(145deg,#171717,#101010);
+.card {
+  background:linear-gradient(145deg,#191919,#101010);
   border:1px solid #302719;
   border-radius:14px;
   padding:20px;
 }
-.card h3{color:var(--gold);font-size:15px;margin:0 0 10px}
-.card p{font-size:12px;color:#aaa;line-height:1.9}
-.action{
+.card h3 { color:var(--gold); font-size:15px; margin:0 0 10px; }
+.card p { font-size:12px; color:#aaa; line-height:1.9; }
+.action {
   display:inline-block;
   background:#c49a4d;
   color:#090909;
@@ -125,21 +122,21 @@ h1{font-size:25px;font-weight:500;margin:28px 0 8px}
   font-weight:bold;
   font-size:12px;
 }
-.secondary{
+.secondary {
   background:#211b11;
   color:var(--gold);
   border:1px solid #514027;
 }
-.section{display:none}
-.section.active{display:block}
-.panel{
+.section { display:none; }
+.section.active { display:block; }
+.panel {
   background:#111;
   border:1px solid #302719;
   border-radius:14px;
   padding:20px;
   margin-top:20px;
 }
-input,textarea,select{
+input,textarea,select {
   width:100%;
   background:#090909;
   color:white;
@@ -149,8 +146,8 @@ input,textarea,select{
   margin:8px 0;
   outline:none;
 }
-textarea{min-height:100px;resize:vertical}
-.task{
+textarea { min-height:100px; resize:vertical; }
+.task {
   padding:12px;
   border-bottom:1px solid #29231a;
   color:#ddd;
@@ -158,44 +155,44 @@ textarea{min-height:100px;resize:vertical}
   gap:10px;
   align-items:center;
 }
-.task input{width:auto;margin:0}
-.task.done span{text-decoration:line-through;color:#777}
-.toolbar{
+.task input { width:auto; margin:0; }
+.task.done span { text-decoration:line-through; color:#777; }
+.toolbar {
   display:flex;
   gap:10px;
   flex-wrap:wrap;
   align-items:center;
 }
-.toolbar input,.toolbar select{flex:1;min-width:150px}
-.library-grid{
+.toolbar input,.toolbar select { flex:1; min-width:150px; }
+.library-grid {
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
   gap:14px;
   margin-top:18px;
 }
-.design{
+.design {
   background:#151515;
   border:1px solid #352b1d;
   border-radius:12px;
   overflow:hidden;
 }
-.design img{
+.design img {
   width:100%;
   height:190px;
   object-fit:cover;
   background:#080808;
   display:block;
 }
-.design-info{padding:12px}
-.design-info strong{color:var(--gold);font-size:13px}
-.design-info p{
+.design-info { padding:12px; }
+.design-info strong { color:var(--gold); font-size:13px; }
+.design-info p {
   font-size:11px;
   color:#aaa;
   line-height:1.7;
   white-space:pre-wrap;
 }
-.design-info button{margin:3px}
-.empty{
+.design-info button { margin:3px; }
+.empty {
   color:#888;
   text-align:center;
   padding:25px;
@@ -203,37 +200,37 @@ textarea{min-height:100px;resize:vertical}
   border-radius:12px;
   margin-top:16px;
 }
-footer{
+footer {
   text-align:center;
   color:#666;
   font-size:10px;
   padding:35px 0;
 }
-@media(max-width:700px){
-  .app{display:block}
-  .sidebar{
+@media(max-width:700px) {
+  .app { display:block; }
+  .sidebar {
     width:100%;
     padding:15px;
     border-left:0;
     border-bottom:1px solid #29231a;
   }
-  .logo{font-size:21px}
-  .brandmark{width:42px;height:42px}
-  .sub{margin:5px 0 13px}
-  .menu{
+  .logo { font-size:21px; }
+  .brandmark { width:42px; height:42px; }
+  .sub { margin:5px 0 13px; }
+  .menu {
     display:flex;
     overflow-x:auto;
     gap:5px;
   }
-  .menu button{
+  .menu button {
     white-space:nowrap;
     width:auto;
     padding:11px;
     font-size:12px;
   }
-  .sidefoot{display:none}
-  main{padding:18px 14px}
-  h1{font-size:22px}
+  .sidefoot { display:none; }
+  main { padding:18px 14px; }
+  h1 { font-size:22px; }
 }
 </style>
 </head>
@@ -243,7 +240,7 @@ footer{
 
 <aside class="sidebar">
   <div class="brand">
-    <img src="./fama-icon.png" alt="FAMA AI" class="brandmark">
+    <img src="./fama-icon.svg" alt="FAMA AI" class="brandmark">
     <div>
       <div class="logo">FAMA</div>
       <div style="font-size:9px;color:#aaa">PERSONAL AI</div>
@@ -401,241 +398,349 @@ footer{
 </div>
 
 <script>
-function openPage(id){
-  document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.menu button').forEach(x=>x.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.querySelector('[data-page="'+id+'"]').classList.add('active');
-  if(id==='library'){
+function openPage(id) {
+  document.querySelectorAll('.section').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.menu button').forEach(x => x.classList.remove('active'));
+
+  const section = document.getElementById(id);
+  const button = document.querySelector('[data-page="' + id + '"]');
+
+  if (!section || !button) return;
+
+  section.classList.add('active');
+  button.classList.add('active');
+
+  if (id === 'library') {
     refreshFolderMenus();
     renderDesigns();
   }
 }
-document.querySelectorAll('.menu button').forEach(b=>{
-  b.addEventListener('click',()=>openPage(b.dataset.page));
+
+document.querySelectorAll('.menu button').forEach(button => {
+  button.addEventListener('click', () => openPage(button.dataset.page));
 });
 
-function askAI(prompt){
-  window.open('https://chatgpt.com/?q='+encodeURIComponent(prompt),'_blank');
+function askAI(prompt) {
+  window.open('https://chatgpt.com/?q=' + encodeURIComponent(prompt), '_blank');
 }
-function makeReel(){
-  let topic=document.getElementById('topic').value.trim();
-  if(!topic){
+
+function makeReel() {
+  const topic = document.getElementById('topic').value.trim();
+
+  if (!topic) {
     alert('اول موضوع ویدیوت رو بنویس');
     return;
   }
-  askAI('برای برند LUSIFER TATTOO یک سناریوی وایرال اینستاگرام ریلز درباره این موضوع بنویس: '+topic+' . هوک سه ثانیه اول، متن روی تصویر، پلان‌ها، کپشن و هشتگ‌های مرتبط را پیشنهاد بده.');
+
+  askAI('برای برند LUSIFER TATTOO یک سناریوی وایرال اینستاگرام ریلز درباره این موضوع بنویس: ' +
+    topic +
+    '. هوک سه ثانیه اول، متن روی تصویر، پلان‌ها، کپشن و هشتگ‌های مرتبط را پیشنهاد بده.');
 }
 
-let tasks=JSON.parse(localStorage.getItem('famaTasks')||'[]');
+/* برنامه روزانه */
+let tasks = [];
 
-function saveTasks(){
-  localStorage.setItem('famaTasks',JSON.stringify(tasks));
+try {
+  tasks = JSON.parse(localStorage.getItem('famaTasks') || '[]');
+  if (!Array.isArray(tasks)) tasks = [];
+} catch (e) {
+  tasks = [];
+}
+
+function saveTasks() {
+  try {
+    localStorage.setItem('famaTasks', JSON.stringify(tasks));
+  } catch (e) {
+    alert('ذخیره برنامه در این مرورگر ممکن نشد.');
+  }
   renderTasks();
 }
-function addTask(){
-  let v=document.getElementById('taskInput').value.trim();
-  if(!v)return;
-  tasks.push({text:v,done:false});
-  document.getElementById('taskInput').value='';
+
+function addTask() {
+  const input = document.getElementById('taskInput');
+  const value = input.value.trim();
+
+  if (!value) return;
+
+  tasks.push({ text:value, done:false });
+  input.value = '';
   saveTasks();
 }
-function toggleTask(i){
-  tasks[i].done=!tasks[i].done;
+
+function toggleTask(index) {
+  tasks[index].done = !tasks[index].done;
   saveTasks();
 }
-function deleteTask(i){
-  tasks.splice(i,1);
+
+function deleteTask(index) {
+  tasks.splice(index, 1);
   saveTasks();
 }
-function renderTasks(){
-  document.getElementById('tasks').innerHTML=tasks.map((t,i)=>
-    '<div class="task '+(t.done?'done':'')+'"><input type="checkbox" '+(t.done?'checked':'')+' onchange="toggleTask('+i+')"><span style="flex:1">'+escapeHTML(t.text)+'</span><button class="secondary action" onclick="deleteTask('+i+')">حذف</button></div>'
-  ).join('');
-}
-function escapeHTML(s){
-  return String(s).replace(/[&<>"']/g,c=>({
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, character => ({
     '&':'&amp;',
     '<':'&lt;',
     '>':'&gt;',
     '"':'&quot;',
     "'":'&#39;'
-  }[c]));
+  })[character]);
 }
+
+function renderTasks() {
+  document.getElementById('tasks').innerHTML = tasks.map((task, index) =>
+    '<div class="task ' + (task.done ? 'done' : '') + '">' +
+    '<input type="checkbox" ' + (task.done ? 'checked' : '') +
+    ' onchange="toggleTask(' + index + ')">' +
+    '<span style="flex:1">' + escapeHTML(task.text) + '</span>' +
+    '<button class="action secondary" onclick="deleteTask(' + index + ')">حذف</button>' +
+    '</div>'
+  ).join('');
+}
+
 renderTasks();
 
 /* آرشیو طرح‌ها با IndexedDB */
 let db;
-const dbReady=new Promise((resolve,reject)=>{
-  const req=indexedDB.open('FamaTattooLibrary',1);
-  req.onupgradeneeded=()=>{
-    const d=req.result;
-    if(!d.objectStoreNames.contains('designs')){
-      d.createObjectStore('designs',{keyPath:'id',autoIncrement:true});
+
+const dbReady = new Promise((resolve, reject) => {
+  if (!window.indexedDB) {
+    reject(new Error('IndexedDB unavailable'));
+    return;
+  }
+
+  const request = indexedDB.open('FamaTattooLibrary', 1);
+
+  request.onupgradeneeded = () => {
+    const database = request.result;
+
+    if (!database.objectStoreNames.contains('designs')) {
+      database.createObjectStore('designs', {
+        keyPath:'id',
+        autoIncrement:true
+      });
     }
-    if(!d.objectStoreNames.contains('folders')){
-      d.createObjectStore('folders',{keyPath:'name'});
+
+    if (!database.objectStoreNames.contains('folders')) {
+      database.createObjectStore('folders', {
+        keyPath:'name'
+      });
     }
   };
-  req.onsuccess=()=>{
-    db=req.result;
+
+  request.onsuccess = () => {
+    db = request.result;
     resolve(db);
   };
-  req.onerror=()=>reject(req.error);
+
+  request.onerror = () => reject(request.error);
 });
 
-function store(name,mode='readonly'){
-  return db.transaction(name,mode).objectStore(name);
+function store(name, mode = 'readonly') {
+  return db.transaction(name, mode).objectStore(name);
 }
-async function getAll(name){
+
+async function getAll(name) {
   await dbReady;
-  return new Promise((resolve,reject)=>{
-    const r=store(name).getAll();
-    r.onsuccess=()=>resolve(r.result);
-    r.onerror=()=>reject(r.error);
+
+  return new Promise((resolve, reject) => {
+    const request = store(name).getAll();
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
   });
 }
-async function addFolder(){
-  const input=document.getElementById('folderName');
-  const name=input.value.trim();
-  if(!name)return;
-  await dbReady;
-  const r=store('folders','readwrite').put({name});
-  r.onsuccess=()=>{
-    input.value='';
-    refreshFolderMenus();
-  };
-}
-async function refreshFolderMenus(){
-  try{
-    const folders=await getAll('folders');
-    const options=folders.map(f=>
-      '<option value="'+escapeHTML(f.name)+'">'+escapeHTML(f.name)+'</option>'
-    ).join('');
-    document.getElementById('designFolder').innerHTML=
-      '<option value="بدون پوشه">بدون پوشه</option>'+options;
-    document.getElementById('folderFilter').innerHTML=
-      '<option value="همه">همه پوشه‌ها</option><option value="بدون پوشه">بدون پوشه</option>'+options;
-  }catch(e){}
-}
-async function saveDesign(){
-  const file=document.getElementById('designFile').files[0];
-  const title=document.getElementById('designTitle').value.trim();
-  const notes=document.getElementById('designNotes').value.trim();
-  const folder=document.getElementById('designFolder').value;
-  const status=document.getElementById('saveStatus');
 
-  if(!file){
-    status.textContent='اول تصویر طرح را انتخاب کن.';
-    return;
-  }
-  if(!file.type.startsWith('image/')){
-    status.textContent='فقط فایل تصویری انتخاب کن.';
-    return;
-  }
-  status.textContent='در حال ذخیره...';
+async function addFolder() {
+  const input = document.getElementById('folderName');
+  const name = input.value.trim();
 
-  try{
+  if (!name) return;
+
+  try {
     await dbReady;
-    const r=store('designs','readwrite').add({
-      title:title||file.name,
+
+    const request = store('folders', 'readwrite').put({name});
+
+    request.onsuccess = () => {
+      input.value = '';
+      refreshFolderMenus();
+    };
+
+    request.onerror = () => alert('ساخت پوشه انجام نشد.');
+  } catch (error) {
+    alert('ذخیره‌سازی در این مرورگر در دسترس نیست.');
+  }
+}
+
+async function refreshFolderMenus() {
+  try {
+    const folders = await getAll('folders');
+
+    const options = folders.map(folder =>
+      '<option value="' + escapeHTML(folder.name) + '">' +
+      escapeHTML(folder.name) + '</option>'
+    ).join('');
+
+    document.getElementById('designFolder').innerHTML =
+      '<option value="بدون پوشه">بدون پوشه</option>' + options;
+
+    document.getElementById('folderFilter').innerHTML =
+      '<option value="همه">همه پوشه‌ها</option>' +
+      '<option value="بدون پوشه">بدون پوشه</option>' + options;
+
+  } catch (error) {
+    console.error('Folder error:', error);
+  }
+}
+
+async function saveDesign() {
+  const file = document.getElementById('designFile').files[0];
+  const title = document.getElementById('designTitle').value.trim();
+  const notes = document.getElementById('designNotes').value.trim();
+  const folder = document.getElementById('designFolder').value;
+  const status = document.getElementById('saveStatus');
+
+  if (!file) {
+    status.textContent = 'اول تصویر طرح را انتخاب کن.';
+    return;
+  }
+
+  if (!file.type.startsWith('image/')) {
+    status.textContent = 'فقط فایل تصویری انتخاب کن.';
+    return;
+  }
+
+  status.textContent = 'در حال ذخیره...';
+
+  try {
+    await dbReady;
+
+    const request = store('designs', 'readwrite').add({
+      title:title || file.name,
       notes,
       folder,
       image:file,
       created:Date.now()
     });
-    r.onsuccess=()=>{
-      document.getElementById('designFile').value='';
-      document.getElementById('designTitle').value='';
-      document.getElementById('designNotes').value='';
-      status.textContent='طرح با موفقیت در این دستگاه ذخیره شد.';
+
+    request.onsuccess = () => {
+      document.getElementById('designFile').value = '';
+      document.getElementById('designTitle').value = '';
+      document.getElementById('designNotes').value = '';
+      status.textContent = 'طرح با موفقیت در این دستگاه ذخیره شد.';
       renderDesigns();
     };
-    r.onerror=()=>{
-      status.textContent='ذخیره انجام نشد؛ ممکن است فضای مرورگر کافی نباشد.';
+
+    request.onerror = () => {
+      status.textContent = 'ذخیره انجام نشد؛ ممکن است فضای مرورگر کافی نباشد.';
     };
-  }catch(e){
-    status.textContent='مرورگر اجازه ذخیره‌سازی نداد. از Safari یا Chrome استفاده کن.';
+
+  } catch (error) {
+    status.textContent = 'ذخیره‌سازی در این مرورگر در دسترس نیست.';
   }
 }
-async function renderDesigns(){
-  try{
-    const all=await getAll('designs');
-    const filter=document.getElementById('folderFilter').value;
-    const q=document.getElementById('designSearch').value.trim().toLowerCase();
-    const rows=all.filter(x=>
-      (filter==='همه'||x.folder===filter)&&
-      (!q||(x.title+' '+x.notes).toLowerCase().includes(q))
+
+async function renderDesigns() {
+  try {
+    const all = await getAll('designs');
+    const filter = document.getElementById('folderFilter').value;
+    const query = document.getElementById('designSearch').value.trim().toLowerCase();
+
+    const rows = all.filter(item =>
+      (filter === 'همه' || item.folder === filter) &&
+      (!query || (item.title + ' ' + item.notes).toLowerCase().includes(query))
     );
-    const root=document.getElementById('designs');
-    root.innerHTML='';
-    document.getElementById('libraryEmpty').style.display=
-      rows.length?'none':'block';
 
-    rows.sort((a,b)=>b.created-a.created).forEach(x=>{
-      const url=URL.createObjectURL(x.image);
-      const card=document.createElement('article');
-      card.className='design';
+    const root = document.getElementById('designs');
+    root.innerHTML = '';
 
-      const img=document.createElement('img');
-      <img src="./fama-icon.svg" alt="FAMA AI" class="brandmark">
+    document.getElementById('libraryEmpty').style.display =
+      rows.length ? 'none' : 'block';
 
-      const info=document.createElement('div');
-      info.className='design-info';
+    rows.sort((a, b) => b.created - a.created).forEach(item => {
+      const card = document.createElement('article');
+      card.className = 'design';
 
-      const title=document.createElement('strong');
-      title.textContent=x.title;
+      const image = document.createElement('img');
+      const imageURL = URL.createObjectURL(item.image);
+      image.src = imageURL;
+      image.alt = item.title;
+      image.onload = () => URL.revokeObjectURL(imageURL);
 
-      const folder=document.createElement('p');
-      folder.textContent='پوشه: '+x.folder;
+      const info = document.createElement('div');
+      info.className = 'design-info';
 
-      const notes=document.createElement('p');
-      notes.textContent=x.notes;
+      const title = document.createElement('strong');
+      title.textContent = item.title;
 
-      const del=document.createElement('button');
-      del.className='action secondary';
-      del.textContent='حذف طرح';
-      del.onclick=()=>deleteDesign(x.id);
+      const folder = document.createElement('p');
+      folder.textContent = 'پوشه: ' + item.folder;
 
-      info.append(title,folder,notes,del);
-      card.append(img,info);
+      const notes = document.createElement('p');
+      notes.textContent = item.notes;
+
+      const remove = document.createElement('button');
+      remove.className = 'action secondary';
+      remove.textContent = 'حذف طرح';
+      remove.onclick = () => deleteDesign(item.id);
+
+      info.append(title, folder, notes, remove);
+      card.append(image, info);
       root.append(card);
     });
-  }catch(e){
-    document.getElementById('libraryEmpty').textContent=
+
+  } catch (error) {
+    document.getElementById('libraryEmpty').textContent =
       'آرشیو در این مرورگر در دسترس نیست.';
   }
 }
-async function deleteDesign(id){
-  if(!confirm('این طرح از آرشیو همین دستگاه حذف شود؟'))return;
-  await dbReady;
-  store('designs','readwrite').delete(id).onsuccess=()=>renderDesigns();
+
+async function deleteDesign(id) {
+  if (!confirm('این طرح از آرشیو همین دستگاه حذف شود؟')) return;
+
+  try {
+    await dbReady;
+
+    const request = store('designs', 'readwrite').delete(id);
+    request.onsuccess = () => renderDesigns();
+    request.onerror = () => alert('حذف طرح انجام نشد.');
+
+  } catch (error) {
+    alert('آرشیو در دسترس نیست.');
+  }
 }
-function searchPinterest(){
-  const q=document.getElementById('pinQuery').value.trim();
-  if(!q){
+
+function searchPinterest() {
+  const query = document.getElementById('pinQuery').value.trim();
+
+  if (!query) {
     alert('توصیف طرح را بنویس.');
     return;
   }
+
   window.open(
-    'https://www.pinterest.com/search/pins/?q='+encodeURIComponent(q),
+    'https://www.pinterest.com/search/pins/?q=' + encodeURIComponent(query),
     '_blank'
   );
 }
 
-dbReady.then(()=>{
+/* راه‌اندازی آرشیو و منوی پوشه‌ها */
+dbReady.then(() => {
   refreshFolderMenus();
   renderDesigns();
-}).catch(()=>{
-  document.getElementById('libraryEmpty').textContent=
+}).catch(() => {
+  document.getElementById('libraryEmpty').textContent =
     'ذخیره‌سازی این مرورگر فعال نیست.';
+});
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js")
-      .catch(error => console.error("FAMA SW:", error));
-        });
+/* فعال‌سازی حالت نصب‌شدنی و آفلاین */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .catch(error => console.error('FAMA SW:', error));
+  });
 }
 </script>
+
 </body>
 </html>
