@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "FAMA AI - LUSIFER",
+  "short_name": "FAMA AI",
+  "description": "دستیار شخصی لوسیفر",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#090909",
+  "theme_color": "#090909",
+  "icons": [
+    {
+      "src": "./fama-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
