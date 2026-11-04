@@ -630,7 +630,6 @@ dbReady.then(()=>{
   document.getElementById('libraryEmpty').textContent=
     'ذخیره‌سازی این مرورگر فعال نیست.';
 });
-<script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js")
