@@ -553,8 +553,9 @@ async function sendFamaMessage(customPrompt) {
 - اگر اطلاعات کافی نداری، سؤال بپرس و حدس نزن.
 - خودت را FAMA معرفی کن، نه ChatGPT.
 - لحن تو صمیمی، باهوش و حرفه‌ای باشد.`
-    },
-    ]
+        },
+    ...famaMessages.slice(-30)
+  ]
       })
     });
 
