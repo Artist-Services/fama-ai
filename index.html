@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -121,6 +120,10 @@ h1 { font-size:25px; font-weight:500; margin:28px 0 8px; }
   text-decoration:none;
   font-weight:bold;
   font-size:12px;
+}
+.action:disabled {
+  opacity:.5;
+  cursor:not-allowed;
 }
 .secondary {
   background:#211b11;
@@ -305,21 +308,33 @@ footer {
 
   <section id="chat" class="section">
     <h1>گفت‌وگو با <span class="gold">FAMA</span></h1>
-    <p class="muted">برای گفت‌وگوی هوشمند، چت‌جی‌پی‌تی را باز کن. می‌توانی با صدای فارسی هم صحبت کنی.</p>
+    <p class="muted">دستیار هوشمند شخصی LUSIFER TATTOO</p>
+
     <div class="panel">
-      <button class="action" onclick="window.open('https://chatgpt.com/','_blank')">شروع گفت‌وگوی صوتی و متنی</button>
+      <div id="famaMessages" style="min-height:250px;max-height:55vh;overflow-y:auto;padding:10px">
+        <div class="muted">سلام! من فاما هستم. چطور می‌تونم کمکت کنم؟</div>
+      </div>
+
+      <textarea id="famaInput" placeholder="پیامت رو برای فاما بنویس..." style="min-height:75px"></textarea>
+
+      <button class="action" id="famaSendButton" onclick="sendFamaMessage()">ارسال پیام</button>
+      <button class="action secondary" onclick="clearFamaChat()">پاک کردن گفت‌وگو</button>
+
+      <p id="famaStatus" class="muted" aria-live="polite"></p>
     </div>
   </section>
 
   <section id="instagram" class="section">
     <h1>مدیریت <span class="gold">Instagram</span></h1>
     <p class="muted">ابزار مدیریت و تحلیل پیج LUSIFER TATTOO</p>
+
     <div class="grid">
       <div class="card">
         <h3>تحلیل پیج</h3>
         <p>بررسی آمار، بازدید و تعامل.</p>
         <a class="action" href="https://app.metricool.com/" target="_blank" rel="noopener">ورود به Metricool</a>
       </div>
+
       <div class="card">
         <h3>ایده تولید محتوا</h3>
         <p>برای دریافت ایده و برنامه محتوا کمک بگیر.</p>
@@ -331,6 +346,7 @@ footer {
   <section id="reels" class="section">
     <h1>استودیوی <span class="gold">Reels</span></h1>
     <p class="muted">موضوع ویدیوت را بنویس تا برای ساخت سناریو ارسال شود.</p>
+
     <div class="panel">
       <textarea id="topic" placeholder="مثلاً: یکی از سخت‌ترین اجراهای تتوی من..."></textarea>
       <button class="action" onclick="makeReel()">ساخت سناریو با FAMA</button>
@@ -340,6 +356,7 @@ footer {
   <section id="planner" class="section">
     <h1>برنامه <span class="gold">روزانه</span></h1>
     <p class="muted">کارهایت را ثبت کن و بعد از انجام، تیک بزن.</p>
+
     <div class="panel">
       <input id="taskInput" placeholder="کار جدید را بنویس...">
       <button class="action" onclick="addTask()">افزودن کار</button>
@@ -364,23 +381,29 @@ footer {
       <label class="muted" for="designFile">انتخاب تصویر طرح</label>
       <input id="designFile" type="file" accept="image/*">
       <input id="designTitle" placeholder="نام طرح">
+
       <select id="designFolder">
         <option value="بدون پوشه">بدون پوشه</option>
       </select>
+
       <textarea id="designNotes" placeholder="توضیحات: سبک، محل اجرا، اندازه، ریزه‌کاری‌ها..."></textarea>
+
       <button class="action" onclick="saveDesign()">ذخیره طرح</button>
       <p class="muted" id="saveStatus"></p>
     </div>
 
     <div class="panel">
       <h3 class="gold">پوشه‌ها و طرح‌های ذخیره‌شده</h3>
+
       <div class="toolbar">
         <select id="folderFilter" onchange="renderDesigns()">
           <option value="همه">همه پوشه‌ها</option>
           <option value="بدون پوشه">بدون پوشه</option>
         </select>
+
         <input id="designSearch" placeholder="جست‌وجو در نام و توضیحات..." oninput="renderDesigns()">
       </div>
+
       <div id="designs" class="library-grid"></div>
       <div id="libraryEmpty" class="empty">هنوز طرحی ذخیره نکرده‌ای.</div>
     </div>
@@ -388,7 +411,9 @@ footer {
     <div class="panel">
       <h3 class="gold">جست‌وجوی Pinterest</h3>
       <p class="muted">توصیف طرح را فارسی یا انگلیسی بنویس؛ جست‌وجوی مرتبط در Pinterest باز می‌شود.</p>
+
       <input id="pinQuery" placeholder="مثلاً: realistic black and grey snake tattoo sleeve">
+
       <button class="action" onclick="searchPinterest()">جست‌وجو در Pinterest</button>
     </div>
   </section>
@@ -420,24 +445,188 @@ document.querySelectorAll('.menu button').forEach(button => {
   button.addEventListener('click', () => openPage(button.dataset.page));
 });
 
-function askAI(prompt) {
-  window.open('https://chatgpt.com/?q=' + encodeURIComponent(prompt), '_blank');
+
+/* اتصال گفت‌وگوی FAMA به سرور هوش مصنوعی */
+
+const FAMA_API = "https://fama-ai-server.farzad-tattoo72.workers.dev/chat";
+
+let famaMessages = [];
+
+try {
+  famaMessages = JSON.parse(localStorage.getItem("famaChatHistory") || "[]");
+  if (!Array.isArray(famaMessages)) famaMessages = [];
+} catch (error) {
+  famaMessages = [];
 }
 
-function makeReel() {
-  const topic = document.getElementById('topic').value.trim();
+function saveFamaChat() {
+  try {
+    localStorage.setItem("famaChatHistory", JSON.stringify(famaMessages));
+  } catch (error) {
+    console.warn("FAMA chat history could not be saved:", error);
+  }
+}
 
-  if (!topic) {
-    alert('اول موضوع ویدیوت رو بنویس');
+function showFamaMessages() {
+  const box = document.getElementById("famaMessages");
+  if (!box) return;
+
+  box.innerHTML = "";
+
+  if (!famaMessages.length) {
+    const welcome = document.createElement("div");
+    welcome.className = "muted";
+    welcome.textContent = "سلام! من فاما هستم. چطور می‌تونم کمکت کنم؟";
+    box.appendChild(welcome);
     return;
   }
 
-  askAI('برای برند LUSIFER TATTOO یک سناریوی وایرال اینستاگرام ریلز درباره این موضوع بنویس: ' +
-    topic +
-    '. هوک سه ثانیه اول، متن روی تصویر، پلان‌ها، کپشن و هشتگ‌های مرتبط را پیشنهاد بده.');
+  famaMessages.forEach(message => {
+    const item = document.createElement("div");
+
+    item.style.cssText =
+      "padding:12px;margin:10px 0;border-radius:10px;background:" +
+      (message.role === "user" ? "#211b11" : "#191919") +
+      ";border:1px solid #302719;white-space:pre-wrap;line-height:1.9";
+
+    const label = document.createElement("strong");
+    label.style.color = "#d6ad60";
+    label.textContent = message.role === "user" ? "تو" : "FAMA";
+
+    const content = document.createElement("div");
+    content.textContent = message.content;
+
+    item.append(label, content);
+    box.appendChild(item);
+  });
+
+  box.scrollTop = box.scrollHeight;
 }
 
+async function sendFamaMessage(customPrompt) {
+  const input = document.getElementById("famaInput");
+  const status = document.getElementById("famaStatus");
+  const sendButton = document.getElementById("famaSendButton");
+
+  const message = (
+    typeof customPrompt === "string" ? customPrompt : (input ? input.value : "")
+  ).trim();
+
+  if (!message) return;
+
+  if (input) input.value = "";
+
+  famaMessages.push({
+    role: "user",
+    content: message
+  });
+
+  showFamaMessages();
+  saveFamaChat();
+
+  if (status) status.textContent = "فاما در حال فکر کردنه...";
+  if (sendButton) sendButton.disabled = true;
+
+  try {
+    const response = await fetch(FAMA_API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        messages: famaMessages.slice(-30)
+      })
+    });
+
+    let data = {};
+
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      throw new Error("پاسخ سرور قابل خواندن نیست.");
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        data.message ||
+        ("خطای سرور: " + response.status)
+      );
+    }
+
+    if (!data.reply) {
+      throw new Error("پاسخی از فاما دریافت نشد.");
+    }
+
+    famaMessages.push({
+      role: "assistant",
+      content: data.reply
+    });
+
+    saveFamaChat();
+    showFamaMessages();
+
+    if (status) status.textContent = "فاما آماده است.";
+
+  } catch (error) {
+    if (status) {
+      status.textContent = "خطا در ارتباط: " + error.message;
+    }
+
+  } finally {
+    if (sendButton) sendButton.disabled = false;
+    if (input) input.focus();
+  }
+}
+
+function clearFamaChat() {
+  if (!confirm("گفت‌وگو پاک شود؟")) return;
+
+  famaMessages = [];
+
+  saveFamaChat();
+  showFamaMessages();
+
+  const status = document.getElementById("famaStatus");
+  if (status) status.textContent = "";
+}
+
+function askAI(prompt) {
+  openPage("chat");
+  sendFamaMessage(prompt);
+}
+
+function makeReel() {
+  const topic = document.getElementById("topic").value.trim();
+
+  if (!topic) {
+    alert("اول موضوع ویدیوت رو بنویس");
+    return;
+  }
+
+  askAI(
+    "برای برند LUSIFER TATTOO یک سناریوی وایرال اینستاگرام ریلز درباره این موضوع بنویس: " +
+    topic +
+    ". هوک سه ثانیه اول، متن روی تصویر، پلان‌ها، کپشن و هشتگ‌های مرتبط را پیشنهاد بده."
+  );
+}
+
+showFamaMessages();
+
+const famaInput = document.getElementById("famaInput");
+
+if (famaInput) {
+  famaInput.addEventListener("keydown", function(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendFamaMessage();
+    }
+  });
+}
+
+
 /* برنامه روزانه */
+
 let tasks = [];
 
 try {
@@ -453,6 +642,7 @@ function saveTasks() {
   } catch (e) {
     alert('ذخیره برنامه در این مرورگر ممکن نشد.');
   }
+
   renderTasks();
 }
 
@@ -462,7 +652,11 @@ function addTask() {
 
   if (!value) return;
 
-  tasks.push({ text:value, done:false });
+  tasks.push({
+    text:value,
+    done:false
+  });
+
   input.value = '';
   saveTasks();
 }
@@ -500,7 +694,9 @@ function renderTasks() {
 
 renderTasks();
 
+
 /* آرشیو طرح‌ها با IndexedDB */
+
 let db;
 
 const dbReady = new Promise((resolve, reject) => {
@@ -545,6 +741,7 @@ async function getAll(name) {
 
   return new Promise((resolve, reject) => {
     const request = store(name).getAll();
+
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
@@ -567,6 +764,7 @@ async function addFolder() {
     };
 
     request.onerror = () => alert('ساخت پوشه انجام نشد.');
+
   } catch (error) {
     alert('ذخیره‌سازی در این مرورگر در دسترس نیست.');
   }
@@ -586,7 +784,8 @@ async function refreshFolderMenus() {
 
     document.getElementById('folderFilter').innerHTML =
       '<option value="همه">همه پوشه‌ها</option>' +
-      '<option value="بدون پوشه">بدون پوشه</option>' + options;
+      '<option value="بدون پوشه">بدون پوشه</option>' +
+      options;
 
   } catch (error) {
     console.error('Folder error:', error);
@@ -627,7 +826,9 @@ async function saveDesign() {
       document.getElementById('designFile').value = '';
       document.getElementById('designTitle').value = '';
       document.getElementById('designNotes').value = '';
+
       status.textContent = 'طرح با موفقیت در این دستگاه ذخیره شد.';
+
       renderDesigns();
     };
 
@@ -643,6 +844,7 @@ async function saveDesign() {
 async function renderDesigns() {
   try {
     const all = await getAll('designs');
+
     const filter = document.getElementById('folderFilter').value;
     const query = document.getElementById('designSearch').value.trim().toLowerCase();
 
@@ -663,6 +865,7 @@ async function renderDesigns() {
 
       const image = document.createElement('img');
       const imageURL = URL.createObjectURL(item.image);
+
       image.src = imageURL;
       image.alt = item.title;
       image.onload = () => URL.revokeObjectURL(imageURL);
@@ -702,6 +905,7 @@ async function deleteDesign(id) {
     await dbReady;
 
     const request = store('designs', 'readwrite').delete(id);
+
     request.onsuccess = () => renderDesigns();
     request.onerror = () => alert('حذف طرح انجام نشد.');
 
@@ -724,16 +928,21 @@ function searchPinterest() {
   );
 }
 
+
 /* راه‌اندازی آرشیو و منوی پوشه‌ها */
+
 dbReady.then(() => {
   refreshFolderMenus();
   renderDesigns();
+
 }).catch(() => {
   document.getElementById('libraryEmpty').textContent =
     'ذخیره‌سازی این مرورگر فعال نیست.';
 });
 
+
 /* فعال‌سازی حالت نصب‌شدنی و آفلاین */
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
