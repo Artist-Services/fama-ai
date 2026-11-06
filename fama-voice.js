@@ -401,8 +401,12 @@
       });
 
       if (!response.ok) {
-        throw new Error("خطا در تبدیل صدا: " + response.status);
-      }
+  const errorData = await response.json().catch(() => ({}));
+  throw new Error(
+    "خطای " + response.status + ": " +
+    (errorData.error || "پاسخ نامشخص از سرور")
+  );
+}
 
       const data = await response.json();
 
