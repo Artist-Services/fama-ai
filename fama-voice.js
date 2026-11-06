@@ -123,11 +123,6 @@ async function speakFamaReply(text) {
     status("خطای پخش صدای فاما: " + error.message);
   }
 }
-  if (
-    !voiceEnabled ||
-    !text ||
-    !("speechSynthesis" in window)
-  ) {
     return;
   }
 
