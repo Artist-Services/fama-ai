@@ -70,7 +70,59 @@
   }
 
   
+let currentSpeechAudio = null;
+let currentSpeechUrl = null;
+
 async function speakFamaReply(text) {
+  if (!voiceEnabled || !text) return;
+
+  try {
+    if (currentSpeechAudio) {
+      currentSpeechAudio.pause();
+      currentSpeechAudio = null;
+    }
+
+    if (currentSpeechUrl) {
+      URL.revokeObjectURL(currentSpeechUrl);
+      currentSpeechUrl = null;
+    }
+
+    status("فاما داره جواب رو آماده می‌کنه...");
+
+    const response = await fetch(SERVER + "/tts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ text })
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || "خطا در ساخت صدای فارسی");
+    }
+
+    const audioBlob = await response.blob();
+
+    if (!audioBlob.size) {
+      throw new Error("فایل صوتی خالی دریافت شد.");
+    }
+
+    currentSpeechUrl = URL.createObjectURL(audioBlob);
+    currentSpeechAudio = new Audio(currentSpeechUrl);
+
+    await currentSpeechAudio.play();
+
+    await new Promise(resolve => {
+      currentSpeechAudio.onended = resolve;
+      currentSpeechAudio.onerror = resolve;
+    });
+
+  } catch (error) {
+    console.error("FAMA TTS:", error);
+    status("خطای پخش صدای فاما: " + error.message);
+  }
+}
   if (
     !voiceEnabled ||
     !text ||
