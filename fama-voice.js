@@ -30,7 +30,7 @@
   let currentAbortController = null;
   let speechAbortController = null;
 
-    let speechAudioContext = null;
+  let speechAudioContext = null;
   let currentSpeechSource = null;
 
   let stopReason = "normal";
@@ -61,23 +61,119 @@
     return [];
   }
 
-  function getLastAssistantMessage() {
-    const messages = getMessages();
+  function stopSpeech() {
+    if (speechAbortController) {
+      speechAbortController.abort();
+      speechAbortController = null;
+    }
 
-    for (let i = messages.length - 1; i >= 0; i--) {
-      if (
-        messages[i] &&
-        messages[i].role === "assistant" &&
-        typeof messages[i].content === "string"
-      ) {
-        return messages[i].content;
+    if (currentSpeechSource) {
+      try {
+        currentSpeechSource.onended = null;
+        currentSpeechSource.stop();
+      } catch (error) {}
+
+      try {
+        currentSpeechSource.disconnect();
+      } catch (error) {}
+
+      currentSpeechSource = null;
+    }
+  }
+
+  function splitText(text, maxLength = 450) {
+    const sentences = String(text)
+      .replace(/\s+/g, " ")
+      .match(/[^.!؟?۔]+[.!؟?۔]*/g) || [String(text)];
+
+    const parts = [];
+    let current = "";
+
+    for (const sentence of sentences) {
+      const clean = sentence.trim();
+      if (!clean) continue;
+
+      if (clean.length > maxLength) {
+        if (current) {
+          parts.push(current);
+          current = "";
+        }
+
+        const words = clean.split(/\s+/);
+        let piece = "";
+
+        for (const word of words) {
+          if ((piece + " " + word).trim().length > maxLength) {
+            if (piece) parts.push(piece);
+            piece = word;
+          } else {
+            piece = (piece + " " + word).trim();
+          }
+        }
+
+        if (piece) parts.push(piece);
+        continue;
+      }
+
+      if ((current + " " + clean).trim().length > maxLength) {
+        if (current) parts.push(current);
+        current = clean;
+      } else {
+        current = (current + " " + clean).trim();
       }
     }
 
-    return "";
+    if (current) parts.push(current);
+
+    return parts;
   }
 
-    async function playSpeechPart(text, signal) {
+  function unlockSpeechAudio() {
+    try {
+      const AudioContextClass =
+        window.AudioContext || window.webkitAudioContext;
+
+      if (!AudioContextClass) return;
+
+      if (!speechAudioContext ||
+          speechAudioContext.state === "closed") {
+        speechAudioContext = new AudioContextClass();
+      }
+
+      if (speechAudioContext.state === "suspended") {
+        speechAudioContext.resume().catch(error => {
+          console.warn("FAMA audio resume:", error);
+        });
+      }
+
+      const silentBuffer = speechAudioContext.createBuffer(
+        1,
+        Math.max(
+          1,
+          Math.floor(speechAudioContext.sampleRate * 0.01)
+        ),
+        speechAudioContext.sampleRate
+      );
+
+      const silentSource =
+        speechAudioContext.createBufferSource();
+
+      silentSource.buffer = silentBuffer;
+      silentSource.connect(speechAudioContext.destination);
+      silentSource.start(0);
+
+      silentSource.onended = () => {
+        try {
+          silentSource.disconnect();
+        } catch (error) {}
+      };
+
+    } catch (error) {
+      console.warn("FAMA audio unlock:", error);
+    }
+  }
+
+  async function playSpeechPart(text, signal) {
     const response = await fetch(SERVER + "/tts", {
       method: "POST",
       headers: {
@@ -175,131 +271,6 @@
         cleanup();
         reject(error);
       }
-    });
-  }
-
-  function splitText(text, maxLength = 450) {
-    const sentences = String(text)
-      .replace(/\s+/g, " ")
-      .match(/[^.!؟?۔]+[.!؟?۔]*/g) || [String(text)];
-
-    const parts = [];
-    let current = "";
-
-    for (const sentence of sentences) {
-      const clean = sentence.trim();
-      if (!clean) continue;
-
-      if (clean.length > maxLength) {
-        if (current) {
-          parts.push(current);
-          current = "";
-        }
-
-        const words = clean.split(/\s+/);
-        let piece = "";
-
-        for (const word of words) {
-          if ((piece + " " + word).trim().length > maxLength) {
-            if (piece) parts.push(piece);
-            piece = word;
-          } else {
-            piece = (piece + " " + word).trim();
-          }
-        }
-
-        if (piece) parts.push(piece);
-        continue;
-      }
-
-      if ((current + " " + clean).trim().length > maxLength) {
-        if (current) parts.push(current);
-        current = clean;
-      } else {
-        current = (current + " " + clean).trim();
-      }
-    }
-
-    if (current) parts.push(current);
-
-    return parts;
-  }
-
-  async function playSpeechPart(text, signal) {
-    const response = await fetch(SERVER + "/tts", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ text }),
-      signal
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || "خطا در ساخت صدای فارسی");
-    }
-
-    const blob = await response.blob();
-
-    if (!blob.size) {
-      throw new Error("فایل صوتی خالی دریافت شد.");
-    }
-
-    if (signal.aborted) return;
-
-    currentSpeechUrl = URL.createObjectURL(blob);
-    currentSpeechAudio = new Audio(currentSpeechUrl);
-
-    await new Promise((resolve, reject) => {
-      const audio = currentSpeechAudio;
-      let finished = false;
-
-      function cleanup() {
-        if (finished) return;
-        finished = true;
-
-        audio.onended = null;
-        audio.onerror = null;
-        audio.onpause = null;
-
-        if (currentSpeechUrl) {
-          URL.revokeObjectURL(currentSpeechUrl);
-          currentSpeechUrl = null;
-        }
-
-        if (currentSpeechAudio === audio) {
-          currentSpeechAudio = null;
-        }
-      }
-
-      audio.onended = () => {
-        cleanup();
-        resolve();
-      };
-
-      audio.onerror = () => {
-        cleanup();
-        reject(new Error("پخش صدای فارسی با خطا مواجه شد."));
-      };
-
-      audio.onpause = () => {
-        if (signal.aborted) {
-          cleanup();
-          resolve();
-        }
-      };
-
-      signal.addEventListener("abort", () => {
-        audio.pause();
-        cleanup();
-        resolve();
-      }, { once: true });
-
-      audio.play().catch(error => {
-        cleanup();
-        reject(error);
-      });
     });
   }
 
@@ -447,8 +418,10 @@
     status("در حال آماده‌سازی میکروفون...");
 
     try {
-      if (!navigator.mediaDevices ||
-          !navigator.mediaDevices.getUserMedia) {
+      if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+      ) {
         throw new Error("مرورگر امکان دسترسی به میکروفون را ندارد.");
       }
 
@@ -482,7 +455,9 @@
         await currentAudioContext.resume();
       }
 
-      const source = currentAudioContext.createMediaStreamSource(currentStream);
+      const source =
+        currentAudioContext.createMediaStreamSource(currentStream);
+
       const analyser = currentAudioContext.createAnalyser();
 
       analyser.fftSize = 2048;
@@ -521,7 +496,9 @@
       };
 
       recorder.onstop = async () => {
-        const actualType = recorder.mimeType || mimeType || "audio/webm";
+        const actualType =
+          recorder.mimeType || mimeType || "audio/webm";
+
         const blob = new Blob(chunks, { type: actualType });
 
         stopAudioResources();
@@ -619,7 +596,11 @@
 
       if (!conversationActive || session !== currentSession) return;
 
-      status("خطای میکروفون: " + (error.message || "دسترسی ممکن نیست."));
+      status(
+        "خطای میکروفون: " +
+        (error.message || "دسترسی ممکن نیست.")
+      );
+
       conversationActive = false;
       updateMicButton();
     }
@@ -633,7 +614,11 @@
     const extension = getFileExtension(mimeType);
     const formData = new FormData();
 
-    formData.append("audio", blob, "fama-recording." + extension);
+    formData.append(
+      "audio",
+      blob,
+      "fama-recording." + extension
+    );
 
     currentAbortController = new AbortController();
 
@@ -700,7 +685,10 @@
       console.error("FAMA voice error:", error);
 
       if (conversationActive && session === currentSession) {
-        status("خطای ارسال صدا: " + (error.message || error));
+        status(
+          "خطای ارسال صدا: " +
+          (error.message || error)
+        );
 
         setTimeout(() => {
           if (conversationActive && session === currentSession) {
@@ -737,6 +725,7 @@
     if (conversationActive) {
       stopConversation();
     } else {
+      unlockSpeechAudio();
       startConversation();
     }
   });
@@ -766,5 +755,15 @@
   updateMicButton();
   status("فاما آماده است. برای مکالمه صوتی دکمه را بزن.");
 
-  window.addEventListener("pagehide", stopConversation);
+  window.addEventListener("pagehide", () => {
+    stopConversation();
+
+    if (
+      speechAudioContext &&
+      speechAudioContext.state !== "closed"
+    ) {
+      speechAudioContext.close().catch(() => {});
+      speechAudioContext = null;
+    }
+  });
 })();
