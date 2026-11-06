@@ -3,6 +3,7 @@
   "use strict";
 
   const SERVER = "https://fama-ai-voice.farzad-tattoo72.workers.dev";
+
   const SILENCE_LIMIT = 1300;
   const NO_SPEECH_LIMIT = 12000;
   const MAX_RECORDING_TIME = 20000;
@@ -20,11 +21,18 @@
   let conversationActive = false;
   let voiceEnabled = true;
   let currentSession = 0;
+
   let currentRecorder = null;
   let currentStream = null;
   let currentAudioContext = null;
   let animationFrame = null;
+
   let currentAbortController = null;
+  let speechAbortController = null;
+
+  let currentSpeechAudio = null;
+  let currentSpeechUrl = null;
+
   let stopReason = "normal";
   let chunks = [];
 
@@ -69,16 +77,19 @@
     return "";
   }
 
-  
-let currentSpeechAudio = null;
-let currentSpeechUrl = null;
+  function stopSpeech() {
+    if (speechAbortController) {
+      speechAbortController.abort();
+      speechAbortController = null;
+    }
 
-async function speakFamaReply(text) {
-  if (!voiceEnabled || !text) return;
-
-  try {
     if (currentSpeechAudio) {
+      currentSpeechAudio.onended = null;
+      currentSpeechAudio.onerror = null;
+      currentSpeechAudio.onpause = null;
+
       currentSpeechAudio.pause();
+      currentSpeechAudio.src = "";
       currentSpeechAudio = null;
     }
 
@@ -86,15 +97,63 @@ async function speakFamaReply(text) {
       URL.revokeObjectURL(currentSpeechUrl);
       currentSpeechUrl = null;
     }
+  }
 
-    status("فاما داره جواب رو آماده می‌کنه...");
+  function splitText(text, maxLength = 450) {
+    const sentences = String(text)
+      .replace(/\s+/g, " ")
+      .match(/[^.!؟?۔]+[.!؟?۔]*/g) || [String(text)];
 
+    const parts = [];
+    let current = "";
+
+    for (const sentence of sentences) {
+      const clean = sentence.trim();
+      if (!clean) continue;
+
+      if (clean.length > maxLength) {
+        if (current) {
+          parts.push(current);
+          current = "";
+        }
+
+        const words = clean.split(/\s+/);
+        let piece = "";
+
+        for (const word of words) {
+          if ((piece + " " + word).trim().length > maxLength) {
+            if (piece) parts.push(piece);
+            piece = word;
+          } else {
+            piece = (piece + " " + word).trim();
+          }
+        }
+
+        if (piece) parts.push(piece);
+        continue;
+      }
+
+      if ((current + " " + clean).trim().length > maxLength) {
+        if (current) parts.push(current);
+        current = clean;
+      } else {
+        current = (current + " " + clean).trim();
+      }
+    }
+
+    if (current) parts.push(current);
+
+    return parts;
+  }
+
+  async function playSpeechPart(text, signal) {
     const response = await fetch(SERVER + "/tts", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text }),
+      signal
     });
 
     if (!response.ok) {
@@ -102,73 +161,108 @@ async function speakFamaReply(text) {
       throw new Error(error.error || "خطا در ساخت صدای فارسی");
     }
 
-    const audioBlob = await response.blob();
+    const blob = await response.blob();
 
-    if (!audioBlob.size) {
+    if (!blob.size) {
       throw new Error("فایل صوتی خالی دریافت شد.");
     }
 
-    currentSpeechUrl = URL.createObjectURL(audioBlob);
+    if (signal.aborted) return;
+
+    currentSpeechUrl = URL.createObjectURL(blob);
     currentSpeechAudio = new Audio(currentSpeechUrl);
 
-    await currentSpeechAudio.play();
+    await new Promise((resolve, reject) => {
+      const audio = currentSpeechAudio;
+      let finished = false;
 
-    await new Promise(resolve => {
-      currentSpeechAudio.onended = resolve;
-      currentSpeechAudio.onerror = resolve;
+      function cleanup() {
+        if (finished) return;
+        finished = true;
+
+        audio.onended = null;
+        audio.onerror = null;
+        audio.onpause = null;
+
+        if (currentSpeechUrl) {
+          URL.revokeObjectURL(currentSpeechUrl);
+          currentSpeechUrl = null;
+        }
+
+        if (currentSpeechAudio === audio) {
+          currentSpeechAudio = null;
+        }
+      }
+
+      audio.onended = () => {
+        cleanup();
+        resolve();
+      };
+
+      audio.onerror = () => {
+        cleanup();
+        reject(new Error("پخش صدای فارسی با خطا مواجه شد."));
+      };
+
+      audio.onpause = () => {
+        if (signal.aborted) {
+          cleanup();
+          resolve();
+        }
+      };
+
+      signal.addEventListener("abort", () => {
+        audio.pause();
+        cleanup();
+        resolve();
+      }, { once: true });
+
+      audio.play().catch(error => {
+        cleanup();
+        reject(error);
+      });
     });
-
-  } catch (error) {
-    console.error("FAMA TTS:", error);
-    status("خطای پخش صدای فاما: " + error.message);
-  }
-}
-    return;
   }
 
-  const synth = window.speechSynthesis;
+  async function speakFamaReply(text, session = null) {
+    if (!voiceEnabled || !text) return;
 
-  synth.cancel();
+    stopSpeech();
 
-  // منتظر می‌مانیم فهرست صداهای دستگاه آماده شود
-  let voices = synth.getVoices();
+    const controller = new AbortController();
+    speechAbortController = controller;
 
-  for (let i = 0; i < 10 && voices.length === 0; i++) {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    voices = synth.getVoices();
+    try {
+      const parts = splitText(text);
+
+      for (const part of parts) {
+        if (controller.signal.aborted) break;
+
+        if (
+          session !== null &&
+          (!conversationActive || session !== currentSession)
+        ) {
+          break;
+        }
+
+        status("فاما داره صحبت می‌کنه...");
+
+        await playSpeechPart(part, controller.signal);
+      }
+
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.error("FAMA TTS:", error);
+        status("خطای صدای فاما: " + error.message);
+      }
+    } finally {
+      if (speechAbortController === controller) {
+        speechAbortController = null;
+      }
+    }
   }
 
-  // پیدا کردن صدای فارسی
-  const persianVoice = voices.find(voice =>
-    /^fa([-_]|$)/i.test(voice.lang)
-  );
-
-  const utterance = new SpeechSynthesisUtterance(text);
-
-  utterance.lang = "fa-IR";
-  utterance.rate = 0.88;
-  utterance.pitch = 1;
-  utterance.volume = 1;
-
-  // اگر صدای فارسی روی دستگاه موجود باشد، انتخابش می‌کنیم
-  if (persianVoice) {
-    utterance.voice = persianVoice;
-  }
-
-  return new Promise(resolve => {
-    utterance.onend = resolve;
-
-    utterance.onerror = () => {
-      resolve();
-    };
-
-    synth.speak(utterance);
-  });
-}
-
-    
-
-  // حفظ پاسخ صوتی برای پیام‌های متنی و صوتی
+  // پخش صوتی پاسخ‌های گفت‌وگوی متنی و صوتی
   if (
     typeof window.sendFamaMessage === "function" &&
     !window.sendFamaMessage.__famaVoiceWrapped
@@ -177,6 +271,7 @@ async function speakFamaReply(text) {
 
     const wrappedSend = async function (...args) {
       const previousMessages = getMessages().length;
+      const session = conversationActive ? currentSession : null;
 
       await originalSend.apply(this, args);
 
@@ -189,7 +284,7 @@ async function speakFamaReply(text) {
         lastMessage.role === "assistant" &&
         typeof lastMessage.content === "string"
       ) {
-        await speakFamaReply(lastMessage.content);
+        await speakFamaReply(lastMessage.content, session);
       }
     };
 
@@ -204,7 +299,7 @@ async function speakFamaReply(text) {
     }
 
     if (currentStream) {
-      currentStream.getTracks().forEach((track) => track.stop());
+      currentStream.getTracks().forEach(track => track.stop());
       currentStream = null;
     }
 
@@ -228,6 +323,8 @@ async function speakFamaReply(text) {
       currentAbortController = null;
     }
 
+    stopSpeech();
+
     if (
       currentRecorder &&
       currentRecorder.state !== "inactive"
@@ -240,11 +337,6 @@ async function speakFamaReply(text) {
     }
 
     stopAudioResources();
-
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
-
     updateMicButton();
     status("مکالمه صوتی متوقف شد.");
   }
@@ -261,9 +353,7 @@ async function speakFamaReply(text) {
       "audio/ogg;codecs=opus"
     ];
 
-    return types.find((type) =>
-      MediaRecorder.isTypeSupported(type)
-    ) || "";
+    return types.find(type => MediaRecorder.isTypeSupported(type)) || "";
   }
 
   function getFileExtension(type) {
@@ -313,11 +403,9 @@ async function speakFamaReply(text) {
         await currentAudioContext.resume();
       }
 
-      const source = currentAudioContext.createMediaStreamSource(
-        currentStream
-      );
-
+      const source = currentAudioContext.createMediaStreamSource(currentStream);
       const analyser = currentAudioContext.createAnalyser();
+
       analyser.fftSize = 2048;
       source.connect(analyser);
 
@@ -340,9 +428,10 @@ async function speakFamaReply(text) {
 
       let speechDetected = false;
       let silenceStarted = null;
+
       const startedAt = Date.now();
 
-      recorder.ondataavailable = (event) => {
+      recorder.ondataavailable = event => {
         if (event.data && event.data.size > 0) {
           chunks.push(event.data);
         }
@@ -353,36 +442,35 @@ async function speakFamaReply(text) {
       };
 
       recorder.onstop = async () => {
-        const actualType =
-          recorder.mimeType || mimeType || "audio/webm";
-
+        const actualType = recorder.mimeType || mimeType || "audio/webm";
         const blob = new Blob(chunks, { type: actualType });
 
         stopAudioResources();
 
-        if (!conversationActive || session !== currentSession) {
-          return;
-        }
-
+        if (!conversationActive || session !== currentSession) return;
         if (stopReason === "cancelled") return;
 
         if (stopReason === "no-speech" || !speechDetected) {
           status("منتظر صدای شما هستم...");
+
           setTimeout(() => {
             if (conversationActive && session === currentSession) {
               startListening(session);
             }
           }, 500);
+
           return;
         }
 
         if (blob.size < 1000) {
           status("صدای واضحی دریافت نشد. دوباره گوش می‌دهم...");
+
           setTimeout(() => {
             if (conversationActive && session === currentSession) {
               startListening(session);
             }
           }, 700);
+
           return;
         }
 
@@ -478,12 +566,13 @@ async function speakFamaReply(text) {
       });
 
       if (!response.ok) {
-  const errorData = await response.json().catch(() => ({}));
-  throw new Error(
-    "خطای " + response.status + ": " +
-    (errorData.error || "پاسخ نامشخص از سرور")
-  );
-}
+        const errorData = await response.json().catch(() => ({}));
+
+        throw new Error(
+          "خطای " + response.status + ": " +
+          (errorData.error || "پاسخ نامشخص از سرور")
+        );
+      }
 
       const data = await response.json();
 
@@ -498,11 +587,13 @@ async function speakFamaReply(text) {
 
       if (!transcript) {
         status("متوجه صدات نشدم؛ دوباره گوش می‌دم...");
+
         setTimeout(() => {
           if (conversationActive && session === currentSession) {
             startListening(session);
           }
         }, 700);
+
         return;
       }
 
@@ -552,11 +643,10 @@ async function speakFamaReply(text) {
     const session = currentSession;
 
     updateMicButton();
+    status("فاما آماده مکالمه است...");
 
     if (voiceEnabled) {
-      status("فاما آماده مکالمه است...");
-
-      await speakFamaReply("جانم، گوش می‌دم.");
+      await speakFamaReply("جانم، گوش می‌دم.", session);
 
       if (!conversationActive || session !== currentSession) return;
     }
@@ -580,8 +670,8 @@ async function speakFamaReply(text) {
         ? "صدای فاما: روشن"
         : "صدای فاما: خاموش";
 
-      if (!voiceEnabled && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
+      if (!voiceEnabled) {
+        stopSpeech();
       }
 
       status(
