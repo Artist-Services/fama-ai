@@ -2,22 +2,25 @@
 (function () {
   "use strict";
 
-  let voiceEnabled = false;
-  let continuousMode = false;
-  let busy = false;
-  let recognition = null;
+  const SERVER = "https://fama-ai-voice.farzad-tattoo72.workers.dev";
+
+  let recorder = null;
+  let stream = null;
+  let chunks = [];
+  let recording = false;
+  let voiceEnabled = true;
   let voices = [];
 
   const status = () => document.getElementById("famaStatus");
 
   function setStatus(message) {
-    const el = status();
-    if (el) el.textContent = message;
+    if (status()) status().textContent = message;
   }
 
   function loadVoices() {
-    if (!("speechSynthesis" in window)) return;
-    voices = speechSynthesis.getVoices();
+    if ("speechSynthesis" in window) {
+      voices = speechSynthesis.getVoices();
+    }
   }
 
   loadVoices();
@@ -38,7 +41,7 @@
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "fa-IR";
       utterance.rate = 0.9;
-      utterance.pitch = 0.85;
+      utterance.pitch = 0.95;
 
       const persianVoice = voices.find(v =>
         /^fa([-_]|$)/i.test(v.lang)
@@ -53,75 +56,128 @@
     });
   }
 
-  function restartListening() {
-    if (!continuousMode || busy || !recognition) return;
-
-    setTimeout(() => {
-      if (!continuousMode || busy) return;
-
-      try {
-        recognition.start();
-        setStatus("🎙️ فاما گوش می‌دهد...");
-      } catch (error) {
-        setStatus("برای ادامه مکالمه دوباره میکروفون را بزن.");
+  async function startRecording(button) {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("مرورگر امکان دسترسی به میکروفون را ندارد.");
       }
-    }, 500);
+
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: true
+      });
+
+      let mimeType = "";
+
+      const formats = [
+        "audio/mp4",
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/ogg;codecs=opus"
+      ];
+
+      if (window.MediaRecorder.isTypeSupported) {
+        mimeType = formats.find(type =>
+          MediaRecorder.isTypeSupported(type)
+        ) || "";
+      }
+
+      recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+
+      chunks = [];
+
+      recorder.ondataavailable = event => {
+        if (event.data && event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const type = recorder.mimeType || "audio/mp4";
+        const extension = type.includes("webm") ? "webm" :
+                         type.includes("ogg") ? "ogg" : "m4a";
+
+        const audioBlob = new Blob(chunks, { type });
+
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+          stream = null;
+        }
+
+        button.disabled = true;
+        button.textContent = "⏳ در حال ارسال صدا...";
+
+        try {
+          if (!audioBlob.size) {
+            throw new Error("صدایی ضبط نشد.");
+          }
+
+          const form = new FormData();
+          form.append("file", audioBlob, "fama-recording." + extension);
+
+          setStatus("🎧 فاما داره صدات رو به متن تبدیل می‌کنه...");
+
+          const response = await fetch(SERVER + "/transcribe", {
+            method: "POST",
+            body: form
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || "خطا در تبدیل صدا");
+          }
+
+          const transcript = (data.text || "").trim();
+
+          if (!transcript) {
+            throw new Error("صدای واضحی دریافت نشد؛ دوباره امتحان کن.");
+          }
+
+          setStatus("🗣️ شنیدم: " + transcript);
+
+          await window.sendFamaMessage(transcript);
+
+        } catch (error) {
+          setStatus("خطا: " + error.message);
+        } finally {
+          button.disabled = false;
+          button.textContent = "🎙️ شروع ضبط صدا";
+          chunks = [];
+        }
+      };
+
+      recorder.start();
+
+      recording = true;
+      button.textContent = "⏹️ پایان ضبط و ارسال";
+      setStatus("🎙️ فاما گوش می‌دهد؛ صحبت کن.");
+
+    } catch (error) {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+
+      recording = false;
+      button.textContent = "🎙️ شروع ضبط صدا";
+      setStatus("مشکل میکروفون: " + error.message);
+    }
   }
 
-  function setupRecognition() {
-    const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      setStatus("تشخیص گفتار در این مرورگر پشتیبانی نمی‌شود.");
-      return false;
+  function stopRecording(button) {
+    if (recorder && recording && recorder.state !== "inactive") {
+      recording = false;
+      button.textContent = "⏳ در حال آماده‌سازی صدا...";
+      setStatus("ضبط تمام شد؛ در حال آماده‌سازی...");
+      recorder.stop();
     }
-
-    recognition = new SpeechRecognition();
-    recognition.lang = "fa-IR";
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = async function (event) {
-      const transcript =
-        event.results[event.results.length - 1][0].transcript.trim();
-
-      if (!transcript) return;
-
-      busy = true;
-      setStatus("حرفت رو شنیدم؛ فاما داره جواب می‌ده...");
-
-      try {
-        await window.sendFamaMessage(transcript);
-      } catch (error) {
-        setStatus("ارسال پیام انجام نشد.");
-      }
-    };
-
-    recognition.onerror = function (event) {
-      if (event.error === "not-allowed") {
-        continuousMode = false;
-        setStatus("اجازه استفاده از میکروفون داده نشده.");
-      } else if (event.error === "no-speech") {
-        setStatus("صدایی نشنیدم؛ دوباره صحبت کن.");
-      } else {
-        setStatus("خطای میکروفون: " + event.error);
-      }
-    };
-
-    recognition.onend = function () {
-      if (continuousMode && !busy) {
-        restartListening();
-      }
-    };
-
-    return true;
   }
 
   function addButtons() {
     const sendButton = document.getElementById("famaSendButton");
+
     if (!sendButton) return;
 
     if (!document.getElementById("famaVoiceButton")) {
@@ -129,17 +185,21 @@
       voiceButton.id = "famaVoiceButton";
       voiceButton.className = "action secondary";
       voiceButton.style.margin = "8px 4px";
-      voiceButton.textContent = "🔊 فعال‌کردن صدای فاما";
+      voiceButton.textContent = "🔊 صدای فاما روشن";
 
       voiceButton.onclick = function () {
         voiceEnabled = !voiceEnabled;
 
-        if (voiceEnabled) {
-          voiceButton.textContent = "🔇 خاموش‌کردن صدای فاما";
-          speakFamaReply("سلام، من فاما هستم. صدای من فعاله.");
-        } else {
-          voiceButton.textContent = "🔊 فعال‌کردن صدای فاما";
+        voiceButton.textContent = voiceEnabled
+          ? "🔊 صدای فاما روشن"
+          : "🔇 صدای فاما خاموش";
+
+        if (!voiceEnabled && "speechSynthesis" in window) {
           speechSynthesis.cancel();
+        }
+
+        if (voiceEnabled) {
+          speakFamaReply("سلام، من فاما هستم.");
         }
       };
 
@@ -151,57 +211,23 @@
       micButton.id = "famaMicButton";
       micButton.className = "action";
       micButton.style.margin = "8px 4px";
-      micButton.textContent = "🎙️ شروع مکالمه صوتی";
+      micButton.textContent = "🎙️ شروع ضبط صدا";
 
       micButton.onclick = function () {
-        if (continuousMode) {
-          continuousMode = false;
-          busy = false;
-
-          if (recognition) recognition.stop();
-          if ("speechSynthesis" in window) speechSynthesis.cancel();
-
-          micButton.textContent = "🎙️ شروع مکالمه صوتی";
-          setStatus("مکالمه صوتی متوقف شد.");
-          return;
-        }
-
-        if (!recognition && !setupRecognition()) return;
-
-        voiceEnabled = true;
-
-        const voiceButton =
-          document.getElementById("famaVoiceButton");
-
-        if (voiceButton) {
-          voiceButton.textContent = "🔇 خاموش‌کردن صدای فاما";
-        }
-
-        continuousMode = true;
-        busy = false;
-        micButton.textContent = "⏹️ توقف مکالمه صوتی";
-
-        try {
-          recognition.start();
-          setStatus("🎙️ فاما گوش می‌دهد؛ صحبت کن.");
-        } catch (error) {
-          continuousMode = false;
-          micButton.textContent = "🎙️ شروع مکالمه صوتی";
-          setStatus("میکروفون آماده نشد. دوباره امتحان کن.");
+        if (recording) {
+          stopRecording(micButton);
+        } else {
+          startRecording(micButton);
         }
       };
 
-      voiceButtonAfter(sendButton, micButton);
-    }
-  }
+      const voiceButton = document.getElementById("famaVoiceButton");
 
-  function voiceButtonAfter(sendButton, micButton) {
-    const voiceButton = document.getElementById("famaVoiceButton");
-
-    if (voiceButton) {
-      voiceButton.insertAdjacentElement("afterend", micButton);
-    } else {
-      sendButton.insertAdjacentElement("afterend", micButton);
+      if (voiceButton) {
+        voiceButton.insertAdjacentElement("afterend", micButton);
+      } else {
+        sendButton.insertAdjacentElement("afterend", micButton);
+      }
     }
   }
 
@@ -209,24 +235,13 @@
 
   if (typeof originalSend === "function") {
     window.sendFamaMessage = async function () {
-      const before = famaMessages.length;
-
       await originalSend.apply(this, arguments);
 
-      const last = famaMessages[famaMessages.length - 1];
+      const last = window.famaMessages &&
+        window.famaMessages[window.famaMessages.length - 1];
 
-      if (
-        famaMessages.length > before &&
-        last &&
-        last.role === "assistant"
-      ) {
+      if (last && last.role === "assistant") {
         await speakFamaReply(last.content);
-      }
-
-      busy = false;
-
-      if (continuousMode) {
-        restartListening();
       }
     };
   }
