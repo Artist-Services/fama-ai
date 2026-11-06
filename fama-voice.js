@@ -30,8 +30,8 @@
   let currentAbortController = null;
   let speechAbortController = null;
 
-  let currentSpeechAudio = null;
-  let currentSpeechUrl = null;
+    let speechAudioContext = null;
+  let currentSpeechSource = null;
 
   let stopReason = "normal";
   let chunks = [];
@@ -77,26 +77,105 @@
     return "";
   }
 
-  function stopSpeech() {
-    if (speechAbortController) {
-      speechAbortController.abort();
-      speechAbortController = null;
+    async function playSpeechPart(text, signal) {
+    const response = await fetch(SERVER + "/tts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ text }),
+      signal
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || "خطا در ساخت صدای فارسی");
     }
 
-    if (currentSpeechAudio) {
-      currentSpeechAudio.onended = null;
-      currentSpeechAudio.onerror = null;
-      currentSpeechAudio.onpause = null;
+    const blob = await response.blob();
 
-      currentSpeechAudio.pause();
-      currentSpeechAudio.src = "";
-      currentSpeechAudio = null;
+    if (!blob.size) {
+      throw new Error("فایل صوتی خالی دریافت شد.");
     }
 
-    if (currentSpeechUrl) {
-      URL.revokeObjectURL(currentSpeechUrl);
-      currentSpeechUrl = null;
+    if (signal.aborted) return;
+
+    const audioData = await blob.arrayBuffer();
+
+    if (!audioData.byteLength) {
+      throw new Error("فایل صوتی خالی دریافت شد.");
     }
+
+    if (!speechAudioContext) {
+      const AudioContextClass =
+        window.AudioContext || window.webkitAudioContext;
+
+      if (!AudioContextClass) {
+        throw new Error("پخش صدای این مرورگر پشتیبانی نمی‌شود.");
+      }
+
+      speechAudioContext = new AudioContextClass();
+    }
+
+    if (speechAudioContext.state === "suspended") {
+      await speechAudioContext.resume();
+    }
+
+    const audioBuffer =
+      await speechAudioContext.decodeAudioData(audioData.slice(0));
+
+    if (signal.aborted) return;
+
+    await new Promise((resolve, reject) => {
+      const source = speechAudioContext.createBufferSource();
+      let finished = false;
+
+      source.buffer = audioBuffer;
+      source.connect(speechAudioContext.destination);
+      currentSpeechSource = source;
+
+      function cleanup() {
+        if (finished) return;
+        finished = true;
+
+        source.onended = null;
+
+        try {
+          source.disconnect();
+        } catch (error) {}
+
+        if (currentSpeechSource === source) {
+          currentSpeechSource = null;
+        }
+
+        signal.removeEventListener("abort", abortPlayback);
+      }
+
+      function abortPlayback() {
+        try {
+          source.stop();
+        } catch (error) {}
+
+        cleanup();
+        resolve();
+      }
+
+      source.onended = () => {
+        cleanup();
+        resolve();
+      };
+
+      signal.addEventListener("abort", abortPlayback, {
+        once: true
+      });
+
+      try {
+        source.start(0);
+      } catch (error) {
+        cleanup();
+        reject(error);
+      }
+    });
   }
 
   function splitText(text, maxLength = 450) {
