@@ -449,7 +449,7 @@
       console.error("FAMA voice error:", error);
 
       if (conversationActive && session === currentSession) {
-        status("ارتباط با سرور مشکل داشت؛ دوباره تلاش می‌کنم...");
+        status("خطای ارسال صدا: " + (error.message || error));
 
         setTimeout(() => {
           if (conversationActive && session === currentSession) {
