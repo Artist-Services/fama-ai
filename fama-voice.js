@@ -69,7 +69,56 @@
     return "";
   }
 
-  function speakFamaReply(text) {
+  
+async function speakFamaReply(text) {
+  if (
+    !voiceEnabled ||
+    !text ||
+    !("speechSynthesis" in window)
+  ) {
+    return;
+  }
+
+  const synth = window.speechSynthesis;
+
+  synth.cancel();
+
+  // منتظر می‌مانیم فهرست صداهای دستگاه آماده شود
+  let voices = synth.getVoices();
+
+  for (let i = 0; i < 10 && voices.length === 0; i++) {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    voices = synth.getVoices();
+  }
+
+  // پیدا کردن صدای فارسی
+  const persianVoice = voices.find(voice =>
+    /^fa([-_]|$)/i.test(voice.lang)
+  );
+
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  utterance.lang = "fa-IR";
+  utterance.rate = 0.88;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+
+  // اگر صدای فارسی روی دستگاه موجود باشد، انتخابش می‌کنیم
+  if (persianVoice) {
+    utterance.voice = persianVoice;
+  }
+
+  return new Promise(resolve => {
+    utterance.onend = resolve;
+
+    utterance.onerror = () => {
+      resolve();
+    };
+
+    synth.speak(utterance);
+  });
+}
+
     return new Promise((resolve) => {
       if (!voiceEnabled || !text || !("speechSynthesis" in window)) {
         resolve();
