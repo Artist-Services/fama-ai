@@ -119,26 +119,7 @@ async function speakFamaReply(text) {
   });
 }
 
-    return new Promise((resolve) => {
-      if (!voiceEnabled || !text || !("speechSynthesis" in window)) {
-        resolve();
-        return;
-      }
-
-      window.speechSynthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "fa-IR";
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      utterance.volume = 1;
-
-      utterance.onend = () => resolve();
-      utterance.onerror = () => resolve();
-
-      window.speechSynthesis.speak(utterance);
-    });
-  }
+    
 
   // حفظ پاسخ صوتی برای پیام‌های متنی و صوتی
   if (
