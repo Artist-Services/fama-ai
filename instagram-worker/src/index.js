@@ -38,14 +38,27 @@ async function verifySignature(rawBody, signatureHeader, appSecret) {
   return mismatch === 0;
 }
 
-async function createReply(text, env) {
+async function createReply(text, senderId, env) {
+  const historyKey = "ig-thread:" + senderId;
+  let history = [];
+  if (env.FAMA_KV) {
+    try {
+      history = JSON.parse((await env.FAMA_KV.get(historyKey)) || "[]");
+      if (!Array.isArray(history)) history = [];
+    } catch {
+      history = [];
+    }
+  }
+
+  const currentMessage = { role: "user", content: text.slice(0, 4000) };
   const response = await fetch(env.FAMA_CHAT_URL || DEFAULT_FAMA_CHAT_URL, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: text.slice(0, 4000) }
+        ...history.slice(-12),
+        currentMessage
       ]
     })
   });
@@ -54,7 +67,13 @@ async function createReply(text, env) {
   if (!data || typeof data.reply !== "string" || !data.reply.trim()) {
     throw new Error("FAMA_CHAT_EMPTY_REPLY");
   }
-  return data.reply.trim().slice(0, 1000);
+  const reply = data.reply.trim().slice(0, 1000);
+
+  if (env.FAMA_KV) {
+    const nextHistory = [...history.slice(-10), currentMessage, { role: "assistant", content: reply }];
+    await env.FAMA_KV.put(historyKey, JSON.stringify(nextHistory), { expirationTtl: 604800 });
+  }
+  return reply;
 }
 
 async function sendInstagramMessage(recipientId, text, env) {
@@ -108,7 +127,7 @@ async function handleWebhookPost(request, env) {
       }
 
       try {
-        const reply = await createReply(text, env);
+        const reply = await createReply(text, senderId, env);
         await sendInstagramMessage(senderId, reply, env);
       } catch (error) {
         console.error("Instagram DM processing failed:", error instanceof Error ? error.message : "unknown error");
