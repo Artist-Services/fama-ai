@@ -17,7 +17,7 @@ Set these as Worker secrets (never commit them to Git):
 
 - `META_VERIFY_TOKEN`: a long random string you also enter in Meta's webhook Verify Token field.
 - `META_APP_SECRET`: App Secret from the Meta developer app.
-- `IG_ACCESS_TOKEN`: Instagram User Access Token with `instagram_business_manage_messages`.
+- `IG_ACCESS_TOKEN`: Instagram User Access Token with `instagram_business_basic` and `instagram_business_manage_messages`.
 - `IG_USER_ID`: Instagram professional account ID.
 
 The Worker also supports vars `FAMA_CHAT_URL` and `GRAPH_API_VERSION`; defaults are in `wrangler.toml`.
@@ -25,7 +25,7 @@ The Worker also supports vars `FAMA_CHAT_URL` and `GRAPH_API_VERSION`; defaults 
 ## Meta setup still required
 
 1. Use an Instagram Professional account (Business or Creator) and the current Instagram API with Instagram Login setup.
-2. Add the messaging permission `instagram_business_manage_messages` (and the base account permission required by Meta's current setup).
+2. Grant `instagram_business_basic` and `instagram_business_manage_messages` in the Instagram Login flow.
 3. Configure the callback URL as `https://YOUR-WORKER.workers.dev/webhook`.
 4. Set the exact same `META_VERIFY_TOKEN` in Meta and Cloudflare.
 5. Subscribe the app to the Instagram `messages` webhook field.
@@ -35,11 +35,11 @@ The Worker also supports vars `FAMA_CHAT_URL` and `GRAPH_API_VERSION`; defaults 
 
 Create a new Cloudflare Worker named `fama-instagram-webhook` and deploy this folder using Wrangler or Cloudflare's Git integration. Add the four secrets above in Worker Settings > Variables and Secrets.
 
-Optional: create a KV namespace and bind it as `FAMA_KV` for webhook event deduplication.
+Recommended: create a KV namespace and bind it as `FAMA_KV` for webhook event deduplication and 7-day per-customer conversation context. Without KV, replies work but do not retain context between messages.
 
 ## Important limits
 
-- This is a text-only first version. Images, voice notes, story replies, comments, handoff inbox, and multi-turn memory are not implemented yet.
+- This is a text-only first version. Images, voice notes, story replies, comments, and a human handoff inbox are not implemented yet. Multi-turn context is supported when `FAMA_KV` is configured.
 - It only replies after a user initiates a conversation. It is not for unsolicited messages.
 - Meta's messaging window and platform policies apply. Never use it for bulk or unsolicited outreach.
 - No live customer messages are sent until the Worker is deployed, Meta is configured, and the account token is supplied.
