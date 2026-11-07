@@ -174,7 +174,7 @@ const TTS_SERVER = "https://fama-edge-tts-worker.farzad-tattoo72.workers.dev";
   }
 
   async function playSpeechPart(text, signal) {
-    const response = await fetch(TTS_SERVER + "/tts"
+    const response = await fetch(TTS_SERVER + "/tts", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
