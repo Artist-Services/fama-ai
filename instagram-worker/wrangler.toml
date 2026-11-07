@@ -1,0 +1,10 @@
+name = "fama-instagram-webhook"
+main = "src/index.js"
+compatibility_date = "2026-11-07"
+
+[vars]
+FAMA_CHAT_URL = "https://fama-ai-voice.farzad-tattoo72.workers.dev/chat"
+GRAPH_API_VERSION = "v26.0"
+
+# Optional but recommended: create a KV namespace and bind it as FAMA_KV
+# to prevent duplicate replies when Meta retries webhook deliveries.
