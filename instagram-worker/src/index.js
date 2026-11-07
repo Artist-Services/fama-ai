@@ -131,7 +131,8 @@ async function handleWebhookPost(request, env) {
         await sendInstagramMessage(senderId, reply, env);
       } catch (error) {
         console.error("Instagram DM processing failed:", error instanceof Error ? error.message : "unknown error");
-        // Return 200 so Meta does not endlessly retry a message that failed upstream.
+        if (env.FAMA_KV) await env.FAMA_KV.delete(dedupeKey);
+        return json({ error: "MESSAGE_PROCESSING_FAILED" }, 500);
       }
     }
   }
