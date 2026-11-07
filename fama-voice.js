@@ -3,7 +3,7 @@
   "use strict";
 
   const SERVER = "https://fama-ai-voice.farzad-tattoo72.workers.dev";
-
+const TTS_SERVER = "https://fama-edge-tts-worker.farzad-tattoo72.workers.dev";
   const SILENCE_LIMIT = 1300;
   const NO_SPEECH_LIMIT = 12000;
   const MAX_RECORDING_TIME = 20000;
@@ -179,7 +179,7 @@
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, voice: "fa-IR-FaridNeural" }),
       signal
     });
 
