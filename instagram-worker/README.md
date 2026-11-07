@@ -9,7 +9,7 @@ This is a separate Cloudflare Worker. It does not modify the existing FAMA voice
 - Accepts text DMs for an Instagram professional account.
 - Sends the message to the existing FAMA chat endpoint and returns FAMA's `reply` through Instagram's Messaging API.
 - Ignores echoes, non-text messages, and messages sent by the connected account.
-- Optionally uses a Cloudflare KV binding named `FAMA_KV` to deduplicate Meta webhook retries.
+- Optionally uses a Cloudflare KV binding named `FAMA_KV` to deduplicate Meta webhook retries and retain short per-customer conversation context (7 days). Without KV, replies are stateless.
 
 ## Cloudflare secrets
 
